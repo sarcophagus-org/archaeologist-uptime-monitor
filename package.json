@@ -1,0 +1,22 @@
+{
+  "name": "archaeologist-uptime-monitor",
+  "version": "0.0.1",
+  "description": "Monitor and track uptimes of registered Sarcophagus Archaeologists",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sarcophagus-org/archaeologist-uptime-monitor.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sarcophagus-org/archaeologist-uptime-monitor/issues"
+  },
+  "homepage": "https://github.com/sarcophagus-org/archaeologist-uptime-monitor#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
