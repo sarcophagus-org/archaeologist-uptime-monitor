@@ -14,5 +14,4 @@ Build a new image:
 
 - `nvm use`
 - `npm i`
-- `npm run dev` to run service while listening for code updates, OR
-- `npm run start` to start the service
+- `npm run start` to build and start the service
