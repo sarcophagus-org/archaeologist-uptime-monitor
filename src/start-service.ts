@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { NodeConfig } from "./utils/node-config";
-import { createAndStartNode } from "./p2p_node";
-import { genListenAddresses, SIGNAL_SERVER_LIST } from "./utils/p2p_addresses";
+import { createAndStartNode } from "./p2p-node";
+import { genListenAddresses, SIGNAL_SERVER_LIST } from "./utils/p2p-addresses";
 import { logging } from "./utils/logger";
 import { Libp2p } from "@libp2p/interface-libp2p";
 import process from "process";

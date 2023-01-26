@@ -1,6 +1,6 @@
 import { multiaddr } from "@multiformats/multiaddr";
 import express, { Request, Response } from "express";
-import { p2pNode, startService } from "./start_service";
+import { p2pNode, startService } from "./start-service";
 import { logging } from "./utils/logger";
 
 const app = express();
