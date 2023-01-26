@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "start": "npx tsc -p tsconfig.json && node --experimental-specifier-resolution=node build/src/index.js",
-    "dev": "npx concurrently \"npx tsc --watch\" \"nodemon -q build/src/index.js\"",
     "prettier": "npx prettier --write src/**"
   },
   "repository": {
