@@ -3,6 +3,8 @@
 ## Quickstart:
 
 - Clone the repo
+- `cp .env.example .env`
+- `nano .env` and edit as necessary
 - `docker compose up`
 
 DONE!
@@ -14,4 +16,6 @@ Build a new image:
 
 - `nvm use`
 - `npm i`
+- `cp .env.example .env`
+- `nano .env` and edit as necessary
 - `npm run start` to build and start the service
