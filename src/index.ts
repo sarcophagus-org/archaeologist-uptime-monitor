@@ -37,7 +37,7 @@ app.listen(port, async () => {
             // console.log(res);
           })
           .catch(e => {
-            console.log(profile.peerId, e);
+            logging.debug(`could not dial ${profile.peerId}`);
           })
           .finally(() => p2pNode.hangUp(addr));
       });
