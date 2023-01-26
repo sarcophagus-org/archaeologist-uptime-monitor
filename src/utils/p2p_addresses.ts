@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { exit } from "node:process";
 import { logging } from "./logger";
 
@@ -25,9 +26,8 @@ const genListenAddresses = (
   servers: string[],
   peerId?: string,
   isLocal?: boolean,
-  domain?: string
 ): string[] => {
-  return domain
+  return process.env.DOMAIN
     ? wssListenAddress()
     : ssListenAddresses(isLocal === true, servers, peerId);
 };
