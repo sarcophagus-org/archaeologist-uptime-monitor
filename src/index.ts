@@ -18,30 +18,45 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
 app.listen(port, async () => {
   logging.debug("App start");
   try {
-    startService().then(async () => {
-      const web3Interface = await getWeb3Interface();
+    await startService();
 
-      const addresses = await web3Interface.viewStateFacet.getArchaeologistProfileAddresses();
-      const profiles = await web3Interface.viewStateFacet.getArchaeologistProfiles(addresses);
+    const web3Interface = await getWeb3Interface();
 
-      profiles.forEach(profile => {
+    const addresses = await web3Interface.viewStateFacet.getArchaeologistProfileAddresses();
+    const profiles = await web3Interface.viewStateFacet.getArchaeologistProfiles(addresses);
+    const wssProfiles = profiles.filter(profile => profile.peerId.split(":").length === 2);
+    logging.debug(`Number of profiles: ${wssProfiles.length}`);
+
+    let dials = 0;
+    let fails = 0;
+
+    await new Promise<void>((resolve, reject) => {
+      logging.error("---STARTING---");
+      wssProfiles.forEach(async profile => {
         logging.notice(`dial ${profile.peerId.slice(profile.peerId.length - 5, profile.peerId.length)}`);
         const peerIdParts = profile.peerId.split(":");
-        if (peerIdParts.length !== 2) return;
 
         const addr = multiaddr(`/dns4/${peerIdParts[0]}/tcp/443/wss/p2p/${peerIdParts[1]}`);
-        // logging.debug('start dial');
-        p2pNode
-          .dial(addr)
-          .then(res => {
-            // console.log(res);
-          })
-          .catch(e => {
-            logging.debug(`could not dial ${profile.peerId}`);
-          })
-          .finally(() => p2pNode.hangUp(addr));
+        try {
+          const res = await p2pNode.dial(addr);
+          if (res) {
+            dials++;
+          }
+
+          p2pNode.hangUp(addr);
+        } catch (e) {
+          fails++;
+          logging.debug(`could not dial ${profile.peerId}`);
+        }
+
+        if (dials + fails === wssProfiles.length) {
+          resolve();
+        }
       });
     });
+
+    logging.notice(`Dials: ${dials}`);
+    logging.notice(`Fails: ${fails}`);
   } catch (e) {
     logging.debug(e);
   }
