@@ -5,6 +5,8 @@
 - Clone the repo
 - `docker compose up`
 
+DONE!
+
 Build a new image:
 `docker build --pull --rm -f "Dockerfile" -t archaeologist-uptime-monitor:latest "."`
 
