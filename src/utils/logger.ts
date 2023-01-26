@@ -10,9 +10,7 @@ export const logColors = {
 export const logging = {
   debug: (msg: any) => {
     if (process.env.DEBUG) {
-      const debugLog = logColors.muted(
-        `debug-${process.env.npm_package_version}::${msg}`
-      );
+      const debugLog = logColors.muted(`debug-${process.env.npm_package_version}::${msg}`);
       console.log(debugLog);
     }
   },

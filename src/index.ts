@@ -1,5 +1,6 @@
 import { multiaddr } from "@multiformats/multiaddr";
 import express, { Request, Response } from "express";
+import { getWeb3Interface } from "./utils/web3-interface";
 import { p2pNode, startService } from "./start-service";
 import { logging } from "./utils/logger";
 
@@ -17,17 +18,30 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
 app.listen(port, async () => {
   logging.debug("App start");
   try {
-    startService().then(
-      async () => {
-        // const addr = multiaddr(`/ip4/127.0.0.1/tcp/9000/wss/p2p/12D3KooWPr29ZXECDFXe91s7sY7kKXJGguuwf47krWi6gKPZTBea`);
-        const addr = multiaddr(`/dns4/arch-dsk.co.uk/tcp/443/wss/p2p/12D3KooWPr29ZXECDFXe91s7sY7kKXJGguuwf47krWi6gKPZTBea`);
-        logging.debug('start dial');
-        const res = await p2pNode.dial(addr);
-        logging.debug('finish dial');
-        console.log(res);
-        await p2pNode.hangUp(addr);
-        logging.debug('hang up');
+    startService().then(async () => {
+      const web3Interface = await getWeb3Interface();
+
+      const addresses = await web3Interface.viewStateFacet.getArchaeologistProfileAddresses();
+      const profiles = await web3Interface.viewStateFacet.getArchaeologistProfiles(addresses);
+
+      profiles.forEach(profile => {
+        logging.notice(`dial ${profile.peerId.slice(profile.peerId.length - 5, profile.peerId.length)}`);
+        const peerIdParts = profile.peerId.split(":");
+        if (peerIdParts.length !== 2) return;
+
+        const addr = multiaddr(`/dns4/${peerIdParts[0]}/tcp/443/wss/p2p/${peerIdParts[1]}`);
+        // logging.debug('start dial');
+        p2pNode
+          .dial(addr)
+          .then(res => {
+            // console.log(res);
+          })
+          .catch(e => {
+            console.log(profile.peerId, e);
+          })
+          .finally(() => p2pNode.hangUp(addr));
       });
+    });
   } catch (e) {
     logging.debug(e);
   }

@@ -22,14 +22,8 @@ function getLocalStarSignallingPort() {
   return starServerPort;
 }
 
-const genListenAddresses = (
-  servers: string[],
-  peerId?: string,
-  isLocal?: boolean,
-): string[] => {
-  return process.env.DOMAIN
-    ? wssListenAddress()
-    : ssListenAddresses(isLocal === true, servers, peerId);
+const genListenAddresses = (servers: string[], peerId?: string, isLocal?: boolean): string[] => {
+  return process.env.DOMAIN ? wssListenAddress() : ssListenAddresses(isLocal === true, servers, peerId);
 };
 
 const wssListenAddress = (): string[] => {
@@ -37,13 +31,9 @@ const wssListenAddress = (): string[] => {
   return [`/ip4/127.0.0.1/tcp/9000/wss`];
 };
 
-const ssListenAddresses = (
-  isLocal: boolean,
-  servers: string[],
-  peerId?: string
-): string[] => {
+const ssListenAddresses = (isLocal: boolean, servers: string[], peerId?: string): string[] => {
   logging.debug("using signalling server");
-  return servers.map((server) => {
+  return servers.map(server => {
     const ssAddress = isLocal
       ? `/ip4/${server}/tcp/${getLocalStarSignallingPort()}/ws/p2p-webrtc-star`
       : `/dns4/${server}/tcp/443/wss/p2p-webrtc-star`;

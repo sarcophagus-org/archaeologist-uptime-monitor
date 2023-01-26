@@ -39,7 +39,6 @@ export class NodeConfig {
   };
 
   constructor(options: NodeConfigParams = {}) {
-    logging.debug(domain ?? 'no domain');
     if (!domain) {
       // @ts-ignore
       this.configObj.peerDiscovery!.push(webRtcStar.discovery);
