@@ -1,8 +1,6 @@
 import { createLibp2p, Libp2p, Libp2pOptions } from "libp2p";
 import { logging } from "./utils/logger";
 
-// import { getLocalStarSignallingPort } from "../scripts/run_local/helpers";
-
 /**
  * Setup and return a libp2p node instance
  * @param configOptions - Libp2p config
