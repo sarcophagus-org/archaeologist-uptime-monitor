@@ -87,5 +87,5 @@ export async function dialArchaeologists(): Promise<Date> {
   logging.notice(`Fails: ${fails}`);
   logging.error("---FINSISHED DIALING ARCHAEOLOGISTS---");
 
-  return new Date(Date.now() + process.env.DIAL_INTERVAL_MS!);
+  return new Date(Date.now() + Number.parseInt(process.env.DIAL_INTERVAL_MS!));
 }
