@@ -28,6 +28,7 @@ export class NodeConfig {
       autoDial: false,
       dialTimeout: 2000,
     },
+    peerDiscovery: []
   };
 
   constructor(options: NodeConfigParams = {}) {

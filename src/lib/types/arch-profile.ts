@@ -1,5 +1,7 @@
 import { BigNumber } from "ethers";
 
+// TODO -- the profiles dont include the reputation stats
+// These need to be fetched separately
 export interface ArchaeologistProfile {
   accusals: BigNumber;
   archAddress: string;

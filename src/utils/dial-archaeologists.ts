@@ -4,7 +4,7 @@ import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { logging } from "./logger";
 import { p2pNode } from "../start-service";
 
-interface ArchWithIsOnline {
+interface Archaeologist {
   profile: any;
   connectionStatus: boolean;
 }
@@ -14,90 +14,65 @@ interface ProfileWithMultiaddr {
   multiAddr: Multiaddr;
 }
 
-export let onlineNodes: ProfileWithMultiaddr[] = [];
+export let inMemoryOnlineNodes: ProfileWithMultiaddr[] = [];
 
 export async function dialArchaeologists(): Promise<Date> {
-  onlineNodes = [];
+  const onlineNodes: ProfileWithMultiaddr[] = [];
   const web3Interface = await getWeb3Interface();
 
+  // Retrieve all registered archaeologists on-chain
   const addresses: string[] = await web3Interface.viewStateFacet.getArchaeologistProfileAddresses();
-  const profiles: ArchaeologistProfile[] = await web3Interface.viewStateFacet.getArchaeologistProfiles(addresses);
-  const wssProfiles = profiles.filter(profile => profile.peerId.split(":").length === 2);
+  let profiles: ArchaeologistProfile[] = await web3Interface.viewStateFacet.getArchaeologistProfiles(addresses);
+  const archaeologistsToDial = profiles.map((p, i) => ({
+    profile: {
+      ...p,
+        archAddress: addresses[i]
+    }
+  }));
 
-  let dials = 0;
-  let fails = 0;
-  let failedNodes: Record<string, { arch: ArchWithIsOnline; addr: Multiaddr } | undefined> = {};
+  // Setup archaeologist structure
+  const wssProfiles = archaeologistsToDial.filter(arch => arch.profile.peerId.split(":").length === 2);
+  const archaeologists: Archaeologist[] = wssProfiles.map(arch => ({ profile: arch.profile, connectionStatus: false }));
 
-  const archaeologists: ArchWithIsOnline[] = wssProfiles.map(p => ({ profile: p, connectionStatus: false }));
+  // Track failed nodes for reporting
+  let failedNodes: Map<string, { arch: Archaeologist; address: Multiaddr }> = new Map();
 
   logging.error("---DIALING ARCHAEOLOGISTS---");
 
-  const tryDial = async (arch: ArchWithIsOnline, addr) => {
+  const tryDial = async (arch: Archaeologist, address: Multiaddr): Promise<void> => {
     try {
-      const res = await p2pNode.dial(addr);
-      if (res) {
-        dials++;
-        arch.connectionStatus = true;
-        onlineNodes.push({
-          multiAddr: addr,
-          profile: arch.profile,
-        });
-      }
-      if (failedNodes[arch.profile.peerId]) {
-        failedNodes[arch.profile.peerId] = undefined;
-      }
+      await p2pNode.dial(address);
 
-      p2pNode.hangUp(addr);
+      arch.connectionStatus = true;
+      onlineNodes.push({
+        multiAddr: address,
+        profile: arch.profile,
+      });
+
+      setTimeout(async () => {
+        await p2pNode.hangUp(address);
+      }, 200)
     } catch (e) {
-      fails++;
-      failedNodes[arch.profile.peerId] = { addr, arch };
+      failedNodes.set(arch.profile.archAddress, { address, arch }) ;
     }
   };
 
-  // INITIAL DIAL
-  await new Promise<void>(resolve => {
-    archaeologists.map(async arch => {
-      const profile = arch.profile;
+  for (let arch of archaeologists) {
+    const peerIdParts = arch.profile.peerId.split(":");
+    const addr = multiaddr(`/dns4/${peerIdParts[0]}/tcp/443/wss/p2p/${peerIdParts[1]}`);
 
-      const peerIdParts = profile.peerId.split(":");
-
-      const addr = multiaddr(`/dns4/${peerIdParts[0]}/tcp/443/wss/p2p/${peerIdParts[1]}`);
-      await tryDial(arch, addr);
-      p2pNode.stop();
-
-      if (dials + fails === wssProfiles.length) {
-        resolve();
-      }
-    });
-  });
-
-  // RETRY FAILS FROM INITAIL DIAL
-  let totalRetries = 0;
-  while (fails) {
-    totalRetries++;
-    let failedNodesLength = Object.values(failedNodes).filter(val => !!val).length;
-    console.log(`retrying ${failedNodesLength} failed dials`);
-
-    await new Promise<void>(resolve => {
-      let retries = 0;
-
-      Object.keys(failedNodes).forEach(async peerId => {
-        if (failedNodes[peerId]) {
-          fails--;
-          await tryDial(failedNodes[peerId]!.arch, failedNodes[peerId]!.addr);
-          retries++;
-
-          if (retries === failedNodesLength) resolve();
-        }
-      });
-    });
-
-    if (totalRetries === 5) break;
+    await tryDial(arch, addr);
   }
 
-  logging.notice(`Dials: ${dials}`);
-  logging.notice(`Fails: ${fails}`);
-  logging.error("---FINSISHED DIALING ARCHAEOLOGISTS---");
+  // Update in memory nodes to serve to clients
+  inMemoryOnlineNodes = onlineNodes;
+
+  logging.notice(`Total Registered Archaeologists: ${archaeologists.length}`)
+  logging.notice(`Successes: ${onlineNodes.length}`);
+  logging.notice(`Fails: ${failedNodes.size}`);
+  logging.error("---FINISHED DIALING ARCHAEOLOGISTS---");
+
+  logging.notice(`failed archaeologists: ${JSON.stringify(Array.from(failedNodes.keys()))}`)
 
   return new Date(Date.now() + Number.parseInt(process.env.DIAL_INTERVAL_MS!));
 }

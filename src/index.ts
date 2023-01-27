@@ -3,7 +3,7 @@ import cors from "cors";
 import { validateEnvVars } from "./utils/validate-env";
 import { startService } from "./start-service";
 import { logging } from "./utils/logger";
-import { onlineNodes } from "./utils/dial-archaeologists";
+import { inMemoryOnlineNodes } from "./utils/dial-archaeologists";
 
 const app = express();
 const port = 4000;
@@ -15,7 +15,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/online-archaeologists", (req: Request, res: Response) => {
-  res.send(onlineNodes.map(node => node.profile.peerId));
+  res.send(inMemoryOnlineNodes.map(node => node.profile.peerId));
 });
 
 app.listen(port, async () => {
