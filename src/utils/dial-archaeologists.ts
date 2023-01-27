@@ -9,7 +9,15 @@ interface ArchWithIsOnline {
   connectionStatus: boolean;
 }
 
+interface ProfileWithMultiaddr {
+  profile: any;
+  multiAddr: Multiaddr;
+}
+
+export let onlineNodes: ProfileWithMultiaddr[] = [];
+
 export async function dialArchaeologists(): Promise<Date> {
+  onlineNodes = [];
   const web3Interface = await getWeb3Interface();
 
   const addresses: string[] = await web3Interface.viewStateFacet.getArchaeologistProfileAddresses();
@@ -30,6 +38,10 @@ export async function dialArchaeologists(): Promise<Date> {
       if (res) {
         dials++;
         arch.connectionStatus = true;
+        onlineNodes.push({
+          multiAddr: addr,
+          profile: arch.profile,
+        });
       }
       if (failedNodes[arch.profile.peerId]) {
         failedNodes[arch.profile.peerId] = undefined;
