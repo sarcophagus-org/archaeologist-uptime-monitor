@@ -11,20 +11,19 @@ interface NodeConfigParams {
   autoDial?: boolean;
 }
 
-export const SIGNAL_SERVER_LIST = ["sig.encryptafile.com"];
-const DHT_PROTOCOL_PREFIX = "/archaeologist-service";
+// const DHT_PROTOCOL_PREFIX = "/archaeologist-service";
 
-const dht = kadDHT({
-  protocolPrefix: DHT_PROTOCOL_PREFIX,
-  clientMode: false,
-});
+// const dht = kadDHT({
+//   protocolPrefix: DHT_PROTOCOL_PREFIX,
+//   clientMode: false,
+// });
 
 export class NodeConfig {
   public configObj: Libp2pOptions = {
     transports: [webSockets()],
     connectionEncryption: [noise()],
     streamMuxers: [mplex()],
-    dht,
+    // dht,
     connectionManager: {
       autoDial: false,
       dialTimeout: 2000,
