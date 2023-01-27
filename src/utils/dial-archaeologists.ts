@@ -1,10 +1,9 @@
 import { ArchaeologistProfile } from "lib/types/arch-profile";
-import { createAndStartNode } from "../p2p-node";
-import { NodeConfig } from "./node-config";
 import { getWeb3Interface } from "./web3-interface";
 import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { logging } from "./logger";
 import { DIAL_INTERVAL_MS } from "../consts";
+import { p2pNode } from "../start-service";
 
 interface ArchWithIsOnline {
   profile: any;
@@ -27,10 +26,8 @@ export async function dialArchaeologists(): Promise<Date> {
   logging.error("---DIALING ARCHAEOLOGISTS---");
 
   const tryDial = async (arch: ArchWithIsOnline, addr) => {
-    const node = await createAndStartNode(new NodeConfig().configObj);
-
     try {
-      const res = await node.dial(addr);
+      const res = await p2pNode.dial(addr);
       if (res) {
         dials++;
         arch.connectionStatus = true;
@@ -39,7 +36,7 @@ export async function dialArchaeologists(): Promise<Date> {
         failedNodes[arch.profile.peerId] = undefined;
       }
 
-      node.hangUp(addr);
+      p2pNode.hangUp(addr);
     } catch (e) {
       fails++;
       failedNodes[arch.profile.peerId] = { addr, arch };
@@ -51,12 +48,11 @@ export async function dialArchaeologists(): Promise<Date> {
     archaeologists.map(async arch => {
       const profile = arch.profile;
 
-      const interimNode = await createAndStartNode(new NodeConfig().configObj);
       const peerIdParts = profile.peerId.split(":");
 
       const addr = multiaddr(`/dns4/${peerIdParts[0]}/tcp/443/wss/p2p/${peerIdParts[1]}`);
       await tryDial(arch, addr);
-      interimNode.stop();
+      p2pNode.stop();
 
       if (dials + fails === wssProfiles.length) {
         resolve();

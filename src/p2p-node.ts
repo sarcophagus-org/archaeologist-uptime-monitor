@@ -13,7 +13,7 @@ export async function createAndStartNode(configOptions: Libp2pOptions): Promise<
   const peerId = node.peerId.toString();
   await node.start();
 
-  // logging.notice(`\n⚡️ Archaeologist uptime monitor started with id: ${peerId.slice(peerId.length - 5)}\n`);
+  logging.notice(`\n⚡️ Archaeologist uptime monitor started with id: ${peerId.slice(peerId.length - 5)}\n`);
 
   return node;
 }
