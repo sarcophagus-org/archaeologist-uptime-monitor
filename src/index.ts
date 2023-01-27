@@ -36,52 +36,34 @@ app.listen(port, async () => {
 
     let dials = 0;
     let fails = 0;
+    let failedNodes: Record<string, { arch: ArchWithIsOnline; addr: Multiaddr } | undefined> = {};
+
     const archaeologists: ArchWithIsOnline[] = wssProfiles.map(p => ({ profile: p, connectionStatus: false }));
 
     logging.error("---DIALING ARCHAEOLOGISTS---");
-    // for (let arch of archaeologists) {
-    //   const peerIdParts = arch.profile.peerId.split(":");
-    //   try {
-    //     const addr = multiaddr(`/dns4/${peerIdParts[0]}/tcp/443/wss/p2p/${peerIdParts[1]}`);
-    //     const res = await p2pNode.dial(addr);
 
-    //     if (res) {
-    //       dials++;
-    //     }
+    const tryDial = async (arch: ArchWithIsOnline, addr) => {
+      const node = await createAndStartNode(new NodeConfig().configObj);
 
-    //     p2pNode.hangUp(addr);
-    //     arch.connectionStatus = true;
-    //   } catch (e) {
-    //     // fails++;
-    //     // arch.connectionStatus = false;
-    //     // logging.debug(`could not dial ${arch.profile.peerId}`);
-
-    //     if (e.errors[0].type === 'aborted') {
-    //       aborts++;
-    //       console.log(peerIdParts);
-    //     }
-    //     else fails++;
-    //   }
-    // }
-
-    await new Promise<void>(resolve => {
-      let failedNodes: Multiaddr[] = [];
-      const tryDial = async (arch: ArchWithIsOnline, addr) => {
-        const node = await createAndStartNode(new NodeConfig().configObj);
-
-        try {
-          const res = await node.dial(addr);
-          if (res) {
-            dials++;
-            arch.connectionStatus = true;
-          }
-
-          node.hangUp(addr);
-        } catch (e) {
-          fails++;
-          failedNodes.push(addr);
+      try {
+        const res = await node.dial(addr);
+        if (res) {
+          dials++;
+          arch.connectionStatus = true;
         }
-      };
+        if (failedNodes[arch.profile.peerId]) {
+          failedNodes[arch.profile.peerId] = undefined;
+        }
+
+        node.hangUp(addr);
+      } catch (e) {
+        fails++;
+        failedNodes[arch.profile.peerId] = { addr, arch };
+      }
+    };
+
+    // INITIAL DIAL
+    await new Promise<void>(resolve => {
       archaeologists.map(async arch => {
         const profile = arch.profile;
 
@@ -93,35 +75,34 @@ app.listen(port, async () => {
         interimNode.stop();
 
         if (dials + fails === wssProfiles.length) {
-          let totalRetries = 0;
-          while (fails) {
-            totalRetries++;
-            console.log(`retrying ${failedNodes.length} failed dials`);
-
-            await new Promise<void>(resolve => {
-              let retries = 0;
-
-              let abortedNodesLength = failedNodes.length;
-              let abortedNodesCopy = [...failedNodes];
-              failedNodes = [];
-
-              abortedNodesCopy.forEach(async addr => {
-                fails--;
-                await tryDial(arch, addr);
-                retries++;
-
-                if (retries === abortedNodesLength) resolve();
-              });
-            });
-
-            console.log("done retrying");
-            if (totalRetries === 5) break;
-          }
-
           resolve();
         }
       });
     });
+
+    // RETRY FAILS FROM INITAIL DIAL
+    let totalRetries = 0;
+    while (fails) {
+      totalRetries++;
+      let failedNodesLength = Object.values(failedNodes).filter(val => !!val).length;
+      console.log(`retrying ${failedNodesLength} failed dials`);
+
+      await new Promise<void>(resolve => {
+        let retries = 0;
+
+        Object.keys(failedNodes).forEach(async peerId => {
+          if (failedNodes[peerId]) {
+            fails--;
+            await tryDial(failedNodes[peerId]!.arch, failedNodes[peerId]!.addr);
+            retries++;
+
+            if (retries === failedNodesLength) resolve();
+          }
+        });
+      });
+
+      if (totalRetries === 5) break;
+    }
 
     logging.notice(`Dials: ${dials}`);
     logging.notice(`Fails: ${fails}`);
