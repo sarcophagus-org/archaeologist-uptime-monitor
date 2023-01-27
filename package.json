@@ -35,7 +35,6 @@
     "peer-id": "^0.16.0"
   },
   "devDependencies": {
-    "@koush/wrtc": "^0.5.3",
     "@types/express": "^4.17.16",
     "@types/multiaddr": "^7.4.2",
     "@types/node": "^18.11.18",

@@ -55,9 +55,12 @@ app.listen(port, async () => {
       });
     });
 
+    logging.debug(`Number of profiles: ${profiles.length}`);
+    logging.debug(`Number of wss profiles: ${wssProfiles.length}`);
     logging.notice(`Dials: ${dials}`);
     logging.notice(`Fails: ${fails}`);
   } catch (e) {
     logging.debug(e);
+    // console.log(e);
   }
 });
