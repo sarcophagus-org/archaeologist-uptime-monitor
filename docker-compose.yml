@@ -22,7 +22,7 @@ services:
     stdin_open: true
     tty: true
     expose:
-      - "9000"
+      - "4000"
     depends_on:
       - nginx-proxy
       - acme-companion
