@@ -1,2 +1,2 @@
-export const DIAL_INTERVAL_MS = 30_000;
-// export const DIAL_INTERVAL_MS = 600_000; // 10mins
+export const MIN_DIAL_INTERVAL_MS = 30_000; // 5 mins
+// export const MIN_DIAL_INTERVAL_MS = 300_000; // 5 mins

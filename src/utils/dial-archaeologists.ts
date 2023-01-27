@@ -2,7 +2,6 @@ import { ArchaeologistProfile } from "lib/types/arch-profile";
 import { getWeb3Interface } from "./web3-interface";
 import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { logging } from "./logger";
-import { DIAL_INTERVAL_MS } from "../consts";
 import { p2pNode } from "../start-service";
 
 interface ArchWithIsOnline {
@@ -88,5 +87,5 @@ export async function dialArchaeologists(): Promise<Date> {
   logging.notice(`Fails: ${fails}`);
   logging.error("---FINSISHED DIALING ARCHAEOLOGISTS---");
 
-  return new Date(Date.now() + DIAL_INTERVAL_MS);
+  return new Date(Date.now() + process.env.DIAL_INTERVAL_MS!);
 }

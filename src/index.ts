@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import { validateEnvVars } from "./utils/validate-env";
 import { startService } from "./start-service";
 import { logging } from "./utils/logger";
 
@@ -15,5 +16,6 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
 
 app.listen(port, async () => {
   logging.debug("App start");
+  validateEnvVars();
   await startService();
 });
