@@ -15,9 +15,11 @@ interface ProfileWithMultiaddr {
 }
 
 export let inMemoryOnlineNodes: ProfileWithMultiaddr[] = [];
+export let inMemoryOfflineNodeAddresses: string[] = [];
 
 export async function dialArchaeologists(): Promise<Date> {
   const onlineNodes: ProfileWithMultiaddr[] = [];
+  const offlineNodeAddresses: string[] = [];
   const web3Interface = await getWeb3Interface();
 
   // Retrieve all registered archaeologists on-chain
@@ -66,13 +68,14 @@ export async function dialArchaeologists(): Promise<Date> {
 
   // Update in memory nodes to serve to clients
   inMemoryOnlineNodes = onlineNodes;
+  inMemoryOfflineNodeAddresses = Array.from(failedNodes.keys());
 
   logging.notice(`Total Registered Archaeologists: ${archaeologists.length}`)
   logging.notice(`Successes: ${onlineNodes.length}`);
   logging.notice(`Fails: ${failedNodes.size}`);
   logging.error("---FINISHED DIALING ARCHAEOLOGISTS---");
 
-  logging.notice(`failed archaeologists: ${JSON.stringify(Array.from(failedNodes.keys()))}`)
+  logging.notice(`failed archaeologists: ${JSON.stringify(inMemoryOfflineNodeAddresses)}`)
 
   return new Date(Date.now() + Number.parseInt(process.env.DIAL_INTERVAL_MS!));
 }
