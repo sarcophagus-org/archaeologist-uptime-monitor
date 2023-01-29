@@ -26,7 +26,7 @@ export class NodeConfig {
     // dht,
     connectionManager: {
       autoDial: false,
-      dialTimeout: 2000,
+      dialTimeout: 5000,
     },
     peerDiscovery: []
   };
