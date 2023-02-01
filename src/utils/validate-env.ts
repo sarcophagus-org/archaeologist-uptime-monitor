@@ -54,4 +54,9 @@ export function validateEnvVars() {
       }
     },
   });
+
+  _tryReadEnv("FIREBASE_API_KEY", process.env.FIREBASE_API_KEY, { required: true });
+  _tryReadEnv("FIREBASE_AUTH_DOMAIN", process.env.FIREBASE_AUTH_DOMAIN, { required: true });
+  _tryReadEnv("FIREBASE_PROJECT_ID", process.env.FIREBASE_PROJECT_ID, { required: true });
+  _tryReadEnv("FIREBASE_APP_ID", process.env.FIREBASE_APP_ID, { required: true });
 }
