@@ -20,6 +20,12 @@ interface DialAttempt {
   connectionStatus: boolean;
 }
 
+interface UptimeStats {
+  dialAttempts: number;
+  successes: number;
+  uptimeRatio: number;
+}
+
 export const updateIncentivizedArchaeologists = async () => {
   try {
     console.log("Updating incentivizes archaeologists...", incentivizedArchaeologists.length);
@@ -61,6 +67,37 @@ export const getOnlineNodes = async () => {
 
     const onlinePeerIds: string[] = latestOnlineNodesSnapshot.docs.map(node => node.get("peerId"));
     return onlinePeerIds;
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    throw e;
+  }
+};
+
+export const getUptimeStats = async () => {
+  try {
+    const incentivizedArchsSnapshot = await getDocs(collection(db, "incentivized_archaeologists"));
+    const incentivizedArchs: string[] = incentivizedArchsSnapshot.docs.map(doc => doc.get("address"));
+
+    const dialTimes = await getDocs(query(collection(db, "dial_times"), orderBy("time", "desc")));
+    const nDialAttempts = dialTimes.docs.length;
+
+    const uptimeStatistics: Record<string, UptimeStats> = {};
+
+    const successfulDialsSnapshot = (
+      await getDocs(query(collection(db, "dial_attempts"), where("connectionStatus", "==", true)))
+    ).docs;
+
+    for await (const archAddress of incentivizedArchs) {
+      const successes = successfulDialsSnapshot.filter(dial => dial.get("address") === archAddress).length;
+
+      uptimeStatistics[archAddress] = {
+        dialAttempts: nDialAttempts,
+        successes,
+        uptimeRatio: successes / nDialAttempts,
+      };
+    }
+
+    return uptimeStatistics;
   } catch (e) {
     console.error("Error adding document: ", e);
     throw e;
