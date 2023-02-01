@@ -77,8 +77,9 @@ export const getUptimeStats = async (fromTimestamp?: number) => {
     const incentivizedArchs: string[] = incentivizedArchsSnapshot.docs.map(doc => doc.get("address"));
 
     const dialTimes = await getDocs(query(collection(db, "dial_times"), orderBy("time", "desc")));
+
     const nDialAttempts = fromTimestamp
-      ? dialTimes.docs.filter(t => fromTimestamp <= t.get("time")).length
+      ? dialTimes.docs.filter(t => t.get("time") >= fromTimestamp).length
       : dialTimes.docs.length;
 
     const uptimeStatistics: Record<string, UptimeStats> = {};
@@ -88,7 +89,10 @@ export const getUptimeStats = async (fromTimestamp?: number) => {
     ).docs;
 
     for await (const archAddress of incentivizedArchs) {
-      const successes = successfulDialsSnapshot.filter(dial => dial.get("address") === archAddress).length;
+      const successes = successfulDialsSnapshot.filter(
+        dial =>
+          dial.get("address") === archAddress && (fromTimestamp ? dial.get("timestampOfDial") >= fromTimestamp : true)
+      ).length;
 
       uptimeStatistics[archAddress] = {
         dialAttempts: nDialAttempts,
