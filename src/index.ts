@@ -21,7 +21,18 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
 });
 
 app.get("/uptime-stats", (req: Request, res: Response) => {
-  getUptimeStats()
+  let fromTimestamp;
+
+  try {
+    fromTimestamp = Number.parseInt(req.query["from"] as string);
+    if (Number.isNaN(fromTimestamp)) {
+      fromTimestamp = undefined;
+    }
+  } catch (e) {
+    console.log("error parsing from time", e);
+  }
+
+  getUptimeStats(fromTimestamp)
     .then(stats => res.send(stats))
     .catch(() => res.status(500));
 });

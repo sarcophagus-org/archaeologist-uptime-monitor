@@ -73,13 +73,15 @@ export const getOnlineNodes = async () => {
   }
 };
 
-export const getUptimeStats = async () => {
+export const getUptimeStats = async (fromTimestamp?: number) => {
   try {
     const incentivizedArchsSnapshot = await getDocs(collection(db, "incentivized_archaeologists"));
     const incentivizedArchs: string[] = incentivizedArchsSnapshot.docs.map(doc => doc.get("address"));
 
     const dialTimes = await getDocs(query(collection(db, "dial_times"), orderBy("time", "desc")));
-    const nDialAttempts = dialTimes.docs.length;
+    const nDialAttempts = fromTimestamp
+      ? dialTimes.docs.filter(t => fromTimestamp <= t.get("time")).length
+      : dialTimes.docs.length;
 
     const uptimeStatistics: Record<string, UptimeStats> = {};
 
