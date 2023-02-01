@@ -1,5 +1,6 @@
+import { incentivizedArchaeologists } from "../data/seeds";
 import { initializeApp } from "firebase/app";
-import { getFirestore, addDoc, getDocs, collection, query, where, orderBy } from "firebase/firestore";
+import { getFirestore, addDoc, getDocs, collection, query, where, orderBy, setDoc, doc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -18,6 +19,20 @@ interface DialAttempt {
   timestampOfDial: number;
   connectionStatus: boolean;
 }
+
+export const updateIncentivizedArchaeologists = async () => {
+  try {
+    console.log("Updating incentivizes archaeologists...", incentivizedArchaeologists.length);
+
+    for await (const address of incentivizedArchaeologists) {
+      await setDoc(doc(db, `incentivized_archaeologists/${address}`), { address });
+    }
+
+    console.log("DONE!");
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
+};
 
 export const saveDialResults = (attempts: DialAttempt[], timestampOfDial: number) => {
   try {
@@ -48,5 +63,6 @@ export const getOnlineNodes = async () => {
     return onlinePeerIds;
   } catch (e) {
     console.error("Error adding document: ", e);
+    throw e;
   }
 };
