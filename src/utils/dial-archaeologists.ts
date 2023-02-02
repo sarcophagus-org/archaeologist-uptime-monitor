@@ -3,6 +3,7 @@ import { getWeb3Interface } from "./web3-interface";
 import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { logging } from "./logger";
 import { p2pNode } from "../start-service";
+import { saveDialResults } from "./db";
 
 interface Archaeologist {
   profile: any;
@@ -14,10 +15,9 @@ interface ProfileWithMultiaddr {
   multiAddr: Multiaddr;
 }
 
-export let inMemoryOnlineNodes: ProfileWithMultiaddr[] = [];
-
 export async function dialArchaeologists(): Promise<Date> {
   const onlineNodes: ProfileWithMultiaddr[] = [];
+  const offlineNodes: ProfileWithMultiaddr[] = [];
   const web3Interface = await getWeb3Interface();
 
   // Retrieve all registered archaeologists on-chain
@@ -26,18 +26,17 @@ export async function dialArchaeologists(): Promise<Date> {
   const archaeologistsToDial = profiles.map((p, i) => ({
     profile: {
       ...p,
-        archAddress: addresses[i]
-    }
+      archAddress: addresses[i],
+    },
   }));
 
   // Setup archaeologist structure
   const wssProfiles = archaeologistsToDial.filter(arch => arch.profile.peerId.split(":").length === 2);
   const archaeologists: Archaeologist[] = wssProfiles.map(arch => ({ profile: arch.profile, connectionStatus: false }));
 
-  // Track failed nodes for reporting
-  let failedNodes: Map<string, { arch: Archaeologist; address: Multiaddr }> = new Map();
-
   logging.error("---DIALING ARCHAEOLOGISTS---");
+  const timestampOfDial = Date.now();
+  const progressIndicator = setInterval(() => process.stdout.write("."), 5000);
 
   const tryDial = async (arch: Archaeologist, address: Multiaddr): Promise<void> => {
     try {
@@ -51,9 +50,12 @@ export async function dialArchaeologists(): Promise<Date> {
 
       setTimeout(async () => {
         await p2pNode.hangUp(address);
-      }, 200)
+      }, 200);
     } catch (e) {
-      failedNodes.set(arch.profile.archAddress, { address, arch }) ;
+      offlineNodes.push({
+        multiAddr: address,
+        profile: arch.profile,
+      });
     }
   };
 
@@ -64,15 +66,27 @@ export async function dialArchaeologists(): Promise<Date> {
     await tryDial(arch, addr);
   }
 
-  // Update in memory nodes to serve to clients
-  inMemoryOnlineNodes = onlineNodes;
-
-  logging.notice(`Total Registered Archaeologists: ${archaeologists.length}`)
+  logging.notice(`\nTotal Registered Archaeologists: ${archaeologists.length}`);
   logging.notice(`Successes: ${onlineNodes.length}`);
-  logging.notice(`Fails: ${failedNodes.size}`);
+  logging.notice(`Fails: ${offlineNodes.length}`);
   logging.error("---FINISHED DIALING ARCHAEOLOGISTS---");
 
-  logging.notice(`failed archaeologists: ${JSON.stringify(Array.from(failedNodes.keys()))}`)
+  clearInterval(progressIndicator);
+
+  // persist to db
+  const getDialAttempt = (node: ProfileWithMultiaddr, connectionStatus: boolean) => ({
+    address: node.profile.archAddress,
+    peerId: node.profile.peerId,
+    timestampOfDial,
+    connectionStatus,
+  });
+
+  saveDialResults(
+    [...onlineNodes.map(node => getDialAttempt(node, true)), ...offlineNodes.map(node => getDialAttempt(node, false))],
+    timestampOfDial,
+    onlineNodes.length,
+    offlineNodes.length
+  );
 
   return new Date(Date.now() + Number.parseInt(process.env.DIAL_INTERVAL_MS!));
 }
