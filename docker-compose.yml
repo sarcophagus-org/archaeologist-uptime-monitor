@@ -1,12 +1,59 @@
-version: '3.4'
+build:
+  context: .
+  dockerfile: ./Dockerfile
+environment:
+  NODE_ENV: production
+  VIRTUAL_HOST: ${DOMAIN}
+  VIRTUAL_PORT: 4000
+  LETSENCRYPT_HOST: ${DOMAIN}
+env_file:
+  - ./.env
+command:
+  - /bin/bash
+  - -c
+  - npm run start
+stdin_open: true
+tty: true
+expose:
+  - "4000"
+depends_on:
+  - nginx-proxy
+  - acme-companion
 
-services:
-  archaeologistuptimemonitor:
-    image: archaeologist-uptime-monitor
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    environment:
-      NODE_ENV: production
-    ports:
-      - 4000:4000
+nginx-proxy:
+  image: jwilder/nginx-proxy
+  container_name: nginx-proxy
+  networks:
+    service_network:
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+    - vhost:/etc/nginx/vhost.d
+    - html:/usr/share/nginx/html
+    - certs:/etc/nginx/certs
+
+acme-companion:
+  image: nginxproxy/acme-companion
+  networks:
+    service_network:
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - vhost:/etc/nginx/vhost.d
+    - html:/usr/share/nginx/html
+    - certs:/etc/nginx/certs
+    - acme:/etc/acme.sh
+  environment:
+    NGINX_PROXY_CONTAINER: "nginx-proxy"
+  depends_on:
+    - nginx-proxy
+
+networks:
+  service_network:
+
+volumes:
+  certs:
+  vhost:
+  html:
+  acme:
