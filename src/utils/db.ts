@@ -2,12 +2,11 @@ import { incentivizedArchaeologists } from "../data/seeds";
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
-  addDoc,
   getDocs,
   collection,
   query,
   where,
-  orderBy,
+  runTransaction,
   setDoc,
   doc,
   increment,
@@ -40,9 +39,11 @@ export const updateIncentivizedArchaeologists = async () => {
   try {
     console.log("Updating incentivized archaeologists...", incentivizedArchaeologists.length);
 
-    for await (const address of incentivizedArchaeologists) {
-      await setDoc(doc(db, `incentivized_archaeologists/${address}`), { address });
-    }
+    await runTransaction(db, async (transaction) => {
+      for await (const address of incentivizedArchaeologists) {
+        transaction.set(doc(db, `incentivized_archaeologists/${address}`), { address });
+      }
+    });
 
     console.log("DONE!");
   } catch (e) {
@@ -50,18 +51,20 @@ export const updateIncentivizedArchaeologists = async () => {
   }
 };
 
-export const saveDialResults = (attempts: DialAttempt[], timestampOfDial: number, successes: number, fails: number) => {
+export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: number, successes: number, fails: number) => {
   try {
-    attempts.map(async record => {
-      const newRecord: DialAttempt & { successes?: FieldValue; failures?: FieldValue } = record;
+    await runTransaction(db, async (transaction) => {
+      attempts.forEach(async record => {
+        const newRecord: DialAttempt & { successes?: FieldValue; failures?: FieldValue } = record;
 
-      if (record.connectionStatus) {
-        newRecord.successes = increment(1);
-      } else {
-        newRecord.failures = increment(1);
-      }
+        if (record.connectionStatus) {
+          newRecord.successes = increment(1);
+        } else {
+          newRecord.failures = increment(1);
+        }
 
-      setDoc(doc(db, `dial_attempts/${record.address}`), newRecord, { merge: true });
+        transaction.set(doc(db, `dial_attempts/${record.address}`), newRecord, { merge: true });
+      });
     });
 
     setDoc(doc(db, `dial_times/${timestampOfDial}`), { time: timestampOfDial, successes, fails });
