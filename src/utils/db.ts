@@ -37,7 +37,7 @@ interface UptimeStats {
 
 export const updateIncentivizedArchaeologists = async () => {
   try {
-    console.log("Updating incentivizes archaeologists...", incentivizedArchaeologists.length);
+    console.log("Updating incentivized archaeologists...", incentivizedArchaeologists.length);
 
     for await (const address of incentivizedArchaeologists) {
       await setDoc(doc(db, `incentivized_archaeologists/${address}`), { address });
@@ -64,7 +64,6 @@ export const saveDialResults = (attempts: DialAttempt[], timestampOfDial: number
 export const getOnlineNodes = async () => {
   try {
     const dialTimes = await getDocs(query(collection(db, "dial_times"), orderBy("time", "desc"), limitToLast(1)));
-    console.log("dialTimes", dialTimes.docs.length);
 
     const lastDialTime = dialTimes.docs[0].get("time");
 
@@ -79,7 +78,7 @@ export const getOnlineNodes = async () => {
     const onlinePeerIds: string[] = latestOnlineNodesSnapshot.docs.map(node => node.get("peerId"));
     return onlinePeerIds;
   } catch (e) {
-    console.error("Error adding document: ", e);
+    console.error("Error retrieving online nodes: ", e);
     throw e;
   }
 };
@@ -116,7 +115,7 @@ export const getUptimeStats = async (fromTimestamp?: number) => {
 
     return uptimeStatistics;
   } catch (e) {
-    console.error("Error adding document: ", e);
+    console.error("Error retrieving uptime stats: ", e);
     throw e;
   }
 };
