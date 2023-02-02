@@ -1,6 +1,17 @@
 import { incentivizedArchaeologists } from "../data/seeds";
 import { initializeApp } from "firebase/app";
-import { getFirestore, addDoc, getDocs, collection, query, where, orderBy, setDoc, doc } from "firebase/firestore";
+import {
+  getFirestore,
+  addDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  orderBy,
+  setDoc,
+  doc,
+  limitToLast,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -52,7 +63,9 @@ export const saveDialResults = (attempts: DialAttempt[], timestampOfDial: number
 
 export const getOnlineNodes = async () => {
   try {
-    const dialTimes = await getDocs(query(collection(db, "dial_times"), orderBy("time", "desc")));
+    const dialTimes = await getDocs(query(collection(db, "dial_times"), orderBy("time", "desc"), limitToLast(1)));
+    console.log("dialTimes", dialTimes.docs.length);
+
     const lastDialTime = dialTimes.docs[0].get("time");
 
     const latestOnlineNodesSnapshot = await getDocs(
