@@ -10,14 +10,14 @@ interface Archaeologist {
   connectionStatus: boolean;
 }
 
-interface ProfileWithMultiaddr {
-  profile: any;
-  multiAddr: Multiaddr;
+interface ArchIdentifier {
+  peerId: string;
+  address: string;
 }
 
 export async function dialArchaeologists(): Promise<Date> {
-  const onlineNodes: ProfileWithMultiaddr[] = [];
-  const offlineNodes: ProfileWithMultiaddr[] = [];
+  const onlineNodes: ArchIdentifier[] = [];
+  const offlineNodes: ArchIdentifier[] = [];
   const web3Interface = await getWeb3Interface();
 
   // Retrieve all registered archaeologists on-chain
@@ -44,8 +44,8 @@ export async function dialArchaeologists(): Promise<Date> {
 
       arch.connectionStatus = true;
       onlineNodes.push({
-        multiAddr: address,
-        profile: arch.profile,
+        peerId: arch.profile.peerId,
+        address: arch.profile.archAddress,
       });
 
       setTimeout(async () => {
@@ -53,8 +53,8 @@ export async function dialArchaeologists(): Promise<Date> {
       }, 200);
     } catch (e) {
       offlineNodes.push({
-        multiAddr: address,
-        profile: arch.profile,
+        peerId: arch.profile.peerId,
+        address: arch.profile.archAddress,
       });
     }
   };
@@ -74,9 +74,9 @@ export async function dialArchaeologists(): Promise<Date> {
   clearInterval(progressIndicator);
 
   // persist to db
-  const getDialAttempt = (node: ProfileWithMultiaddr, connectionStatus: boolean) => ({
-    address: node.profile.archAddress,
-    peerId: node.profile.peerId,
+  const getDialAttempt = (node: ArchIdentifier, connectionStatus: boolean) => ({
+    address: node.address,
+    peerId: node.peerId,
     timestampOfDial,
     connectionStatus,
   });
