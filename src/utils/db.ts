@@ -35,6 +35,9 @@ interface UptimeStats {
   uptimeRatio: number;
 }
 
+let uptimeStatisticsCached: Record<string, UptimeStats> | undefined = undefined;
+let lastUptimeRetrieval = 0;
+
 export const updateIncentivizedArchaeologists = async () => {
   try {
     console.log("Updating incentivized archaeologists...", incentivizedArchaeologists.length);
@@ -89,6 +92,13 @@ export const getOnlineNodes = async () => {
 
 export const getUptimeStats = async () => {
   try {
+    if (lastUptimeRetrieval) {
+      // If we last retrieved within 30 minutes
+      if (lastUptimeRetrieval > (Date.now() - (60 * 30 * 1000))) {
+        return uptimeStatisticsCached;
+      }
+    }
+
     const incentivizedArchsSnapshot = await getDocs(collection(db, "incentivized_archaeologists"));
     const incentivizedArchs: string[] = incentivizedArchsSnapshot.docs.map(doc => doc.get("address"));
 
@@ -112,6 +122,8 @@ export const getUptimeStats = async () => {
       };
     }
 
+    lastUptimeRetrieval = Date.now();
+    uptimeStatisticsCached = uptimeStatistics;
     return uptimeStatistics;
   } catch (e) {
     console.error("Error retrieving uptime stats: ", e);
