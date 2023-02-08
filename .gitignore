@@ -3,3 +3,4 @@ build
 .vscode
 .env
 .idea/
+failed-dials.json
