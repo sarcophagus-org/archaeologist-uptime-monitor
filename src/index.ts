@@ -20,7 +20,7 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
     .catch(() => res.status(500));
 });
 
-app.get("/uptime-stats", (req: Request, res: Response) => {
+app.get("/arch-uptime-statistics", (req: Request, res: Response) => {
   getUptimeStats()
     .then(stats => res.send(stats))
     .catch(() => res.status(500));
