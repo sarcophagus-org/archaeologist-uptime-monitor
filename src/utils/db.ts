@@ -55,6 +55,8 @@ export const updateIncentivizedArchaeologists = async () => {
 };
 
 export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: number, successes: number, fails: number) => {
+  // TODO -- revert table to dial_attempts_temp -> dial_attempts when time to start tracking uptime again
+  // TODO -- uncomment dial times when time to start tracking again
   try {
     await runTransaction(db, async (transaction) => {
       attempts.forEach(async record => {
@@ -66,20 +68,21 @@ export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: 
           newRecord.failures = increment(1);
         }
 
-        transaction.set(doc(db, `dial_attempts/${record.address}`), newRecord, { merge: true });
+        transaction.set(doc(db, `dial_attempts_temp/${record.address}`), newRecord, { merge: true });
       });
     });
 
-    setDoc(doc(db, `dial_times/${timestampOfDial}`), { time: timestampOfDial, successes, fails });
+    // setDoc(doc(db, `dial_times/${timestampOfDial}`), { time: timestampOfDial, successes, fails });
   } catch (e) {
     console.error("Error adding document: ", e);
   }
 };
 
 export const getOnlineNodes = async () => {
+  // TODO -- revert table to dial_attempts_temp -> dial_attempts when time to start tracking uptime again
   try {
     const latestOnlineNodesSnapshot = await getDocs(
-      query(collection(db, "dial_attempts"), where("connectionStatus", "==", true))
+      query(collection(db, "dial_attempts_temp"), where("connectionStatus", "==", true))
     );
 
     const onlinePeerIds: string[] = latestOnlineNodesSnapshot.docs.map(node => node.get("peerId"));
