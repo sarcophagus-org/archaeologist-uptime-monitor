@@ -3,7 +3,7 @@ import cors from "cors";
 import { validateEnvVars } from "./utils/validate-env";
 import { startService } from "./start-service";
 import { logging } from "./utils/logger";
-import { getOnlineNodes, getUptimeStats } from "./utils/db";
+import { getOfflineNodesAddresses, getOnlineNodes, getUptimeStats } from "./utils/db";
 
 const app = express();
 const port = 4000;
@@ -17,6 +17,12 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/online-archaeologists", (req: Request, res: Response) => {
   getOnlineNodes()
     .then(onlineList => res.send(onlineList))
+    .catch(() => res.status(500));
+});
+
+app.get("/offline-archaeologists", (req: Request, res: Response) => {
+  getOfflineNodesAddresses()
+    .then(offlineList => res.send(offlineList))
     .catch(() => res.status(500));
 });
 

@@ -93,6 +93,21 @@ export const getOnlineNodes = async () => {
   }
 };
 
+export const getOfflineNodesAddresses = async () => {
+  // TODO -- revert table to dial_attempts_temp -> dial_attempts when time to start tracking uptime again
+  try {
+    const latestOfflineNodesSnapshot = await getDocs(
+      query(collection(db, "dial_attempts_temp"), where("connectionStatus", "==", false))
+    );
+
+    const offlineAddresses: string[] = latestOfflineNodesSnapshot.docs.map(node => node.get("address"));
+    return offlineAddresses;
+  } catch (e) {
+    console.error("Error retrieving online nodes: ", e);
+    throw e;
+  }
+};
+
 export const getUptimeStats = async () => {
   try {
     if (lastUptimeRetrieval) {
