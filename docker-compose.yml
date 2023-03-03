@@ -21,6 +21,7 @@ services:
       - npm run start
     stdin_open: true
     tty: true
+    restart: always
     expose:
       - "4000"
     depends_on:
@@ -30,6 +31,7 @@ services:
   nginx-proxy:
     image: jwilder/nginx-proxy
     container_name: nginx-proxy
+    restart: always
     networks:
       service_network:
     ports:
@@ -43,6 +45,7 @@ services:
 
   acme-companion:
     image: nginxproxy/acme-companion
+    restart: always
     networks:
       service_network:
     volumes:
