@@ -36,7 +36,9 @@ interface UptimeStats {
 }
 
 let uptimeStatisticsCached: Record<string, UptimeStats> | undefined = undefined;
+let onlinePeerIdsCached: string[] = [];
 let lastUptimeRetrieval = 0;
+let lastOnlinePeerIdsRetrieval = 0;
 
 export const updateIncentivizedArchaeologists = async () => {
   try {
@@ -78,11 +80,20 @@ export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: 
 
 export const getOnlineNodes = async () => {
   try {
+    if (lastOnlinePeerIdsRetrieval) {
+      // If we last retrieved within 20 minutes
+      if (lastOnlinePeerIdsRetrieval > (Date.now() - (60 * 20 * 1000))) {
+        return onlinePeerIdsCached;
+      }
+    }
+
     const latestOnlineNodesSnapshot = await getDocs(
       query(collection(db, "dial_attempts"), where("connectionStatus", "==", true))
     );
 
     const onlinePeerIds: string[] = latestOnlineNodesSnapshot.docs.map(node => node.get("peerId"));
+    onlinePeerIdsCached = onlinePeerIds;
+    lastOnlinePeerIdsRetrieval = Date.now();
     return onlinePeerIds;
   } catch (e) {
     console.error("Error retrieving online nodes: ", e);
