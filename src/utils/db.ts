@@ -62,17 +62,19 @@ export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: 
       attempts.forEach(async record => {
         const newRecord: DialAttempt & { successes?: FieldValue; failures?: FieldValue } = record;
 
-        if (record.connectionStatus) {
-          newRecord.successes = increment(1);
-        } else {
-          newRecord.failures = increment(1);
-        }
+        // TODO - re-enable for uptime monitoring
+        // if (record.connectionStatus) {
+        //   newRecord.successes = increment(1);
+        // } else {
+        //   newRecord.failures = increment(1);
+        // }
 
         transaction.set(doc(db, `dial_attempts/${record.address}`), newRecord, { merge: true });
       });
     });
 
-    setDoc(doc(db, `dial_times/${timestampOfDial}`), { time: timestampOfDial, successes, fails });
+    // TODO - re-enable for uptime monitoring
+    // setDoc(doc(db, `dial_times/${timestampOfDial}`), { time: timestampOfDial, successes, fails });
   } catch (e) {
     console.error("Error adding document: ", e);
   }

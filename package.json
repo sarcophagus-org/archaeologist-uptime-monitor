@@ -27,7 +27,7 @@
     "@libp2p/webrtc-star-signalling-server": "^2.0.5",
     "@libp2p/websockets": "^5.0.1",
     "@multiformats/multiaddr": "^11.3.0",
-    "@sarcophagus-org/sarcophagus-v2-contracts": "^0.14.5",
+    "@sarcophagus-org/sarcophagus-v2-contracts": "^0.16.0",
     "chalk": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
