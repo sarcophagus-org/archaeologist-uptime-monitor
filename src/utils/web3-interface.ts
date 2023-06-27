@@ -38,7 +38,7 @@ export const getWeb3Interface = async (deployAddress?: string): Promise<Web3Inte
     const network = await rpcProvider.detectNetwork();
 
     const viewStateFacet: ViewStateFacet = ViewStateFacet__factory.connect(
-      deployAddress || "fake",
+      deployAddress || networkConfig.diamondDeployAddress,
       rpcProvider
     );
     const thirdPartyFacet = ThirdPartyFacet__factory.connect(networkConfig.diamondDeployAddress, rpcProvider);
