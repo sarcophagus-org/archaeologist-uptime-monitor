@@ -4,7 +4,7 @@ import { validateEnvVars } from "./utils/validate-env";
 import { startService } from "./start-service";
 import { logging } from "./utils/logger";
 import { getOfflineNodesAddresses, getOnlineNodes, getUptimeStats } from "./utils/db";
-import { SubgraphData } from "graph/subgraph";
+import { SubgraphData } from "./graph/subgraph";
 
 const app = express();
 const port = 4000;
