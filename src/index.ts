@@ -34,37 +34,37 @@ app.get("/arch-uptime-statistics", (req: Request, res: Response) => {
 });
 
 app.get("/subgraph/arch-stats", (req: Request, res: Response) => {
-  SubgraphData.getArchStats(req.params.archAddress)
+  SubgraphData.getArchStats(req.query.archAddress as string)
     .then(stats => res.send(stats))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/sarcophagus", (req: Request, res: Response) => {
-  SubgraphData.getSarcophagus(req.params.sarcoId, req.params.archAddress)
+  SubgraphData.getSarcophagus(req.query.sarcoId as string, req.query.archAddress as string)
     .then(sarco => res.send(sarco))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/sarcophagi-ids", (req: Request, res: Response) => {
-  SubgraphData.getSarcophagiIds(req.params.archAddress)
+  SubgraphData.getSarcophagiIds(req.query.archAddress as string)
     .then(sarcoIds => res.send(sarcoIds))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/sarcophagi", (req: Request, res: Response) => {
-  SubgraphData.getSarcophagi(req.params.archAddress)
+  SubgraphData.getSarcophagi(req.query.archAddress as string)
     .then(sarcos => res.send(sarcos))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/active-sarcophagi", (req: Request, res: Response) => {
-  SubgraphData.getActiveSarcophagi(req.params.archAddress)
+  SubgraphData.getActiveSarcophagi(req.query.archAddress as string)
     .then(sarcos => res.send(sarcos))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/past-sarcophagi", (req: Request, res: Response) => {
-  SubgraphData.getPastSarcophagi(req.params.archAddress)
+  SubgraphData.getPastSarcophagi(req.query.archAddress as string)
     .then(sarcos => res.send(sarcos))
     .catch(() => res.status(500));
 });

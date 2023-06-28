@@ -36,6 +36,9 @@ export async function getGracePeriod(): Promise<BigNumber> {
   return web3Interface.viewStateFacet.getGracePeriod();
 }
 async function queryGraphQl(query: string) {
+  console.log('query', query)
+  console.log('subgraph', process.env.SUBGRAPH_URL)
+  console.log('querystring', JSON.stringify({ query }))
   const response = await fetch(
     process.env.SUBGRAPH_URL!,
     {
