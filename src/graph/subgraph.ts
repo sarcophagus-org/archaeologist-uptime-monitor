@@ -2,6 +2,7 @@ import { getWeb3Interface } from "../utils/web3-interface";
 import fetch from "node-fetch";
 import "dotenv/config";
 import { BigNumber } from "ethers";
+import process from "process";
 
 export interface SarcophagusDataSimple {
   id: string;
@@ -35,12 +36,13 @@ export async function getGracePeriod(): Promise<BigNumber> {
   const web3Interface = await getWeb3Interface();
   return web3Interface.viewStateFacet.getGracePeriod();
 }
-async function queryGraphQl(query: string) {
-  console.log('query', query)
-  console.log('subgraph', process.env.SUBGRAPH_URL)
-  console.log('querystring', JSON.stringify({ query }))
+
+const getSubgraphUrl = (chainId: string): string => {
+  return (chainId === "5") ? process.env.GOERLI_SUBGRAPH_URL! : process.env.MAINNET_SUBGRAPH_URL!
+}
+async function queryGraphQl(query: string, chainId: string) {
   const response = await fetch(
-    process.env.SUBGRAPH_URL!,
+    getSubgraphUrl(chainId),
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -122,8 +124,8 @@ const getCurseStatus = (
       : "FAILED";
 
 export class SubgraphData {
-  static getArchStats = async (archAddress: string) => {
-    const { archaeologist: archStats } = await queryGraphQl(getArchStatsQuery(archAddress));
+  static getArchStats = async (archAddress: string, chainId: string) => {
+    const { archaeologist: archStats } = await queryGraphQl(getArchStatsQuery(archAddress), chainId);
 
     const { successes, accusals, failures } = archStats;
 
@@ -136,7 +138,8 @@ export class SubgraphData {
 
   static getSarcophagus = async (
     sarcoId: string,
-    archAddress: string
+    archAddress: string,
+    chainId: string
   ): Promise<
     | (SarcophagusDataSimple & {
     rewrapCount: number;
@@ -145,7 +148,8 @@ export class SubgraphData {
   > => {
     try {
       const { sarcophagusData, rewrapSarcophaguses } = (await queryGraphQl(
-        getSarcoWithRewrapsQuery(sarcoId)
+        getSarcoWithRewrapsQuery(sarcoId),
+        chainId
       )) as {
         sarcophagusData: SarcoDataSubgraph;
         rewrapSarcophaguses: {
@@ -179,9 +183,9 @@ export class SubgraphData {
    * Returns all sarcophagi ids that the archaeologist is cursed on, sourced
    * from subgraph.
    */
-  static getSarcophagiIds = async (archAddress: string): Promise<string[]> => {
+  static getSarcophagiIds = async (archAddress: string, chainId: string): Promise<string[]> => {
     try {
-      const { sarcophagusDatas } = (await queryGraphQl(getArchSarcosQuery(archAddress))) as {
+      const { sarcophagusDatas } = (await queryGraphQl(getArchSarcosQuery(archAddress), chainId)) as {
         sarcophagusDatas: SarcoDataSubgraph[];
       };
 
@@ -197,9 +201,9 @@ export class SubgraphData {
    * from subgraph. This DOES NOT include `cursedAmount` and `perSecondFee`
    * and must be queried separately from the contracts.
    */
-  static getSarcophagi = async (archAddress: string): Promise<SarcophagusDataSimple[]> => {
+  static getSarcophagi = async (archAddress: string, chainId: string): Promise<SarcophagusDataSimple[]> => {
     try {
-      const { sarcophagusDatas } = (await queryGraphQl(getArchSarcosQuery(archAddress))) as {
+      const { sarcophagusDatas } = (await queryGraphQl(getArchSarcosQuery(archAddress), chainId)) as {
         sarcophagusDatas: SarcoDataSubgraph[];
       };
 
@@ -223,7 +227,7 @@ export class SubgraphData {
     }
   };
 
-  static getActiveSarcophagi = async (archAddress: string): Promise<SarcophagusDataSimple[]> => {
+  static getActiveSarcophagi = async (archAddress: string, chainId: string): Promise<SarcophagusDataSimple[]> => {
     try {
       const blockTimestamp = await getBlockTimestamp();
       const gracePeriod = (await getGracePeriod()).toNumber();
@@ -232,7 +236,7 @@ export class SubgraphData {
         getArchSarcosQuery(archAddress, {
           limitToActiveForArch: true,
           activeTimeThreshold: blockTimestamp - gracePeriod,
-        })
+        }), chainId
       )) as { sarcophagusDatas: SarcoDataSubgraph[] };
 
       return sarcophagusDatas.map<SarcophagusDataSimple>(s => ({
@@ -247,7 +251,7 @@ export class SubgraphData {
     }
   };
 
-  static getPastSarcophagi = async (archAddress: string): Promise<SarcophagusDataSimple[]> => {
+  static getPastSarcophagi = async (archAddress: string, chainId: string): Promise<SarcophagusDataSimple[]> => {
     try {
       const blockTimestamp = await getBlockTimestamp();
       const gracePeriod = (await getGracePeriod()).toNumber();
@@ -256,7 +260,7 @@ export class SubgraphData {
         getArchSarcosQuery(archAddress, {
           limitToActiveForArch: false,
           activeTimeThreshold: blockTimestamp - gracePeriod,
-        })
+        }), chainId
       )) as { sarcophagusDatas: SarcoDataSubgraph[] };
 
       return sarcophagusDatas.map<SarcophagusDataSimple>(s => ({
