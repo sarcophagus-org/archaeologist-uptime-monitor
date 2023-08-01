@@ -6,6 +6,8 @@ import { logging } from "./utils/logger";
 import { getOnlineNodes, getUptimeStats } from "./utils/db";
 import { SubgraphData } from "utils/subgraph";
 
+import { TypedEthereumSigner } from "arbundles";
+
 const app = express();
 const port = 4000;
 
@@ -46,7 +48,7 @@ app.get("/subgraph/sarcophagus", (req: Request, res: Response) => {
 
 const getActiveSarcophagi = (archAddress: string) => SubgraphData.getActiveSarcophagi(archAddress);
 const getPastSarcophagi = (archAddress: string) => SubgraphData.getPastSarcophagi(archAddress);
- 
+
 app.get("/subgraph/sarcophagi", (req: Request, res: Response) => {
   const archAddress = req.query.archAddress as string;
 
@@ -74,6 +76,26 @@ app.get("/subgraph/past-sarcophagi", (req: Request, res: Response) => {
     .catch(() => res.status(500));
 });
 
+app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
+  const key = process.env.BUNDLR_PAYMENT_PRIVATE_KEY!;
+  if (!key) throw new Error("Private key is undefined!");
+
+  const signer = new TypedEthereumSigner(key);
+  res.status(200).json({ publicKey: signer.publicKey.toString("hex") });
+});
+
+app.get("/bundlr/signData", async (req: Request, res: Response) => {
+  const body = JSON.parse(req.body);
+	const signatureData = Buffer.from(body.signatureData, "hex");
+
+  const key = process.env.PAYMENT_PRIVATE_KEY;
+  if (!key) throw new Error("Private key is undefined!");
+
+  const signer = new TypedEthereumSigner(key);
+  const signature = Buffer.from(await signer.sign(signatureData));
+
+	res.status(200).json({ signature: signature.toString("hex") });
+});
 
 app.listen(port, async () => {
   logging.debug("App start");
