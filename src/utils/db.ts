@@ -42,7 +42,7 @@ export const updateIncentivizedArchaeologists = async () => {
   try {
     console.log("Updating incentivized archaeologists...", incentivizedArchaeologists.length);
 
-    await runTransaction(db, async (transaction) => {
+    await runTransaction(db, async transaction => {
       for await (const address of incentivizedArchaeologists) {
         transaction.set(doc(db, `incentivized_archaeologists/${address}`), { address });
       }
@@ -54,9 +54,14 @@ export const updateIncentivizedArchaeologists = async () => {
   }
 };
 
-export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: number, successes: number, fails: number) => {
+export const saveDialResults = async (
+  attempts: DialAttempt[],
+  timestampOfDial: number,
+  successes: number,
+  fails: number
+) => {
   try {
-    await runTransaction(db, async (transaction) => {
+    await runTransaction(db, async transaction => {
       attempts.forEach(async record => {
         const newRecord: DialAttempt & { successes?: FieldValue; failures?: FieldValue } = record;
 
@@ -94,7 +99,7 @@ export const getUptimeStats = async () => {
   try {
     if (lastUptimeRetrieval) {
       // If we last retrieved within 30 minutes
-      if (lastUptimeRetrieval > (Date.now() - (60 * 30 * 1000))) {
+      if (lastUptimeRetrieval > Date.now() - 60 * 30 * 1000) {
         return uptimeStatisticsCached;
       }
     }
