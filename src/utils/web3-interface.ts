@@ -13,6 +13,7 @@ import { getNetworkConfigByChainId, localChainId } from "../lib/config";
 import { NetworkConfig } from "../lib/types/network-config";
 import { logging } from "./logger";
 import { BAD_ENV } from "./exit-codes";
+import "dotenv/config"
 
 export interface Web3Interface {
   networkName: string;
@@ -28,18 +29,16 @@ export interface Web3Interface {
 
 let web3Interface: Web3Interface;
 
-export const getWeb3Interface = async (): Promise<Web3Interface> => {
+export const getWeb3Interface = async (deployAddress?: string): Promise<Web3Interface> => {
   try {
-    if (!!web3Interface) return web3Interface;
-
     const networkConfig = getNetworkConfigByChainId(process.env.CHAIN_ID || localChainId);
 
-    const rpcProvider = new ethers.providers.JsonRpcProvider(networkConfig.providerUrl || process.env.PROVIDER_URL);
+    const rpcProvider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
 
     const network = await rpcProvider.detectNetwork();
 
     const viewStateFacet: ViewStateFacet = ViewStateFacet__factory.connect(
-      networkConfig.diamondDeployAddress,
+      deployAddress || networkConfig.diamondDeployAddress,
       rpcProvider
     );
     const thirdPartyFacet = ThirdPartyFacet__factory.connect(networkConfig.diamondDeployAddress, rpcProvider);

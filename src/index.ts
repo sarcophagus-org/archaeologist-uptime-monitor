@@ -3,10 +3,9 @@ import cors from "cors";
 import { validateEnvVars } from "./utils/validate-env";
 import { startService } from "./start-service";
 import { logging } from "./utils/logger";
-import { getOnlineNodes, getUptimeStats } from "./utils/db";
-import { SubgraphData } from "utils/subgraph";
-
 import { TypedEthereumSigner } from "arbundles";
+import { getOfflineNodesAddresses, getOnlineNodes, getUptimeStats } from "./utils/db";
+import { SubgraphData } from "./graph/subgraph";
 
 const app = express();
 const port = 4000;
@@ -23,56 +22,51 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
     .catch(() => res.status(500));
 });
 
+app.get("/offline-archaeologists", (req: Request, res: Response) => {
+  getOfflineNodesAddresses()
+    .then(offlineList => res.send(offlineList))
+    .catch(() => res.status(500));
+});
+
 app.get("/arch-uptime-statistics", (req: Request, res: Response) => {
   getUptimeStats()
     .then(stats => res.send(stats))
     .catch(() => res.status(500));
 });
 
-// SUBGRAPH API
 app.get("/subgraph/arch-stats", (req: Request, res: Response) => {
-  const archAddress = req.query.archAddress as string;
-  SubgraphData.getArchStats(archAddress)
+  SubgraphData.getArchStats(req.query.archAddress as string, req.query.chainId as string)
     .then(stats => res.send(stats))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/sarcophagus", (req: Request, res: Response) => {
-  const sarcoId = req.query.sarcoId as string;
-  const archAddress = req.query.archAddress as string;
-
-  SubgraphData.getSarcophagus(sarcoId, archAddress)
+  SubgraphData.getSarcophagus(req.query.sarcoId as string, req.query.archAddress as string, req.query.chainId as string)
     .then(sarco => res.send(sarco))
     .catch(() => res.status(500));
 });
 
-const getActiveSarcophagi = (archAddress: string) => SubgraphData.getActiveSarcophagi(archAddress);
-const getPastSarcophagi = (archAddress: string) => SubgraphData.getPastSarcophagi(archAddress);
+app.get("/subgraph/sarcophagi-ids", (req: Request, res: Response) => {
+  SubgraphData.getSarcophagiIds(req.query.archAddress as string, req.query.chainId as string)
+    .then(sarcoIds => res.send(sarcoIds))
+    .catch(() => res.status(500));
+});
 
 app.get("/subgraph/sarcophagi", (req: Request, res: Response) => {
-  const archAddress = req.query.archAddress as string;
-
-  getActiveSarcophagi(archAddress)
-    .then(async activeSarco => {
-      const pastSarco = await getPastSarcophagi(archAddress);
-      res.send([...activeSarco, ...pastSarco]);
-    })
+  SubgraphData.getSarcophagi(req.query.archAddress as string, req.query.chainId as string)
+    .then(sarcos => res.send(sarcos))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/active-sarcophagi", (req: Request, res: Response) => {
-  const archAddress = req.query.archAddress as string;
-
-  getActiveSarcophagi(archAddress)
-    .then(async activeSarco => res.send(activeSarco))
+  SubgraphData.getActiveSarcophagi(req.query.archAddress as string, req.query.chainId as string)
+    .then(sarcos => res.send(sarcos))
     .catch(() => res.status(500));
 });
 
 app.get("/subgraph/past-sarcophagi", (req: Request, res: Response) => {
-  const archAddress = req.query.archAddress as string;
-
-  getPastSarcophagi(archAddress)
-    .then(async pastSarco => res.send(pastSarco))
+  SubgraphData.getPastSarcophagi(req.query.archAddress as string, req.query.chainId as string)
+    .then(sarcos => res.send(sarcos))
     .catch(() => res.status(500));
 });
 
