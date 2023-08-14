@@ -37,6 +37,43 @@ app.get("/offline-archaeologists", (req: Request, res: Response) => {
     .catch(() => res.status(500));
 });
 
+
+app.get("/subgraph/arch-stats", (req: Request, res: Response) => {
+  SubgraphData.getArchStats(req.params.archAddress)
+    .then(stats => res.send(stats))
+    .catch(() => res.status(500));
+});
+
+app.get("/subgraph/sarcophagus", (req: Request, res: Response) => {
+  SubgraphData.getSarcophagus(req.params.sarcoId, req.params.archAddress)
+    .then(sarco => res.send(sarco))
+    .catch(() => res.status(500));
+});
+
+app.get("/subgraph/sarcophagi-ids", (req: Request, res: Response) => {
+  SubgraphData.getSarcophagiIds(req.params.archAddress)
+    .then(sarcoIds => res.send(sarcoIds))
+    .catch(() => res.status(500));
+});
+
+app.get("/subgraph/sarcophagi", (req: Request, res: Response) => {
+  SubgraphData.getSarcophagi(req.params.archAddress)
+    .then(sarcos => res.send(sarcos))
+    .catch(() => res.status(500));
+});
+
+app.get("/subgraph/active-sarcophagi", (req: Request, res: Response) => {
+  SubgraphData.getActiveSarcophagi(req.params.archAddress)
+    .then(sarcos => res.send(sarcos))
+    .catch(() => res.status(500));
+});
+
+app.get("/subgraph/past-sarcophagi", (req: Request, res: Response) => {
+  SubgraphData.getPastSarcophagi(req.params.archAddress)
+    .then(sarcos => res.send(sarcos))
+    .catch(() => res.status(500));
+});
+
 const allowedDomains = ["app.dev.sarcophagus.io", "app.sarcophagus.io"];
 
 app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
