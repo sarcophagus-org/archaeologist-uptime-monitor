@@ -3,7 +3,8 @@ import cors from "cors";
 import { validateEnvVars } from "./utils/validate-env";
 import { startService } from "./start-service";
 import { logging } from "./utils/logger";
-import { getOnlineNodes, getUptimeStats } from "./utils/db";
+import { getOfflineNodesAddresses, getOnlineNodes, getUptimeStats } from "./utils/db";
+import { SubgraphData } from "./graph/subgraph";
 
 import { TypedEthereumSigner } from "arbundles";
 import { isHexString } from "ethers/lib/utils";
@@ -30,14 +31,17 @@ app.get("/uptime-stats", (req: Request, res: Response) => {
     .catch(() => res.status(500));
 });
 
-const allowedDomains = [
-  'app.dev.sarcophagus.io',
-  'app.sarcophagus.io'
-];
+app.get("/offline-archaeologists", (req: Request, res: Response) => {
+  getOfflineNodesAddresses()
+    .then(offlineList => res.send(offlineList))
+    .catch(() => res.status(500));
+});
+
+const allowedDomains = ["app.dev.sarcophagus.io", "app.sarcophagus.io"];
 
 app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
   if (!allowedDomains.includes(req.headers.host ?? "")) {
-    res.status(403).json({ error: 'Access Forbidden' });
+    res.status(403).json({ error: "Access Forbidden" });
   }
 
   const key = process.env.BUNDLR_PAYMENT_PRIVATE_KEY!;
@@ -49,7 +53,7 @@ app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
 
 app.post("/bundlr/signData", async (req: Request, res: Response) => {
   if (!allowedDomains.includes(req.headers.host ?? "")) {
-    res.status(403).json({ error: 'Access Forbidden' });
+    res.status(403).json({ error: "Access Forbidden" });
   }
 
   const { messageData } = req.body;

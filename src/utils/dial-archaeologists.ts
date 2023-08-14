@@ -82,10 +82,10 @@ export async function dialArchaeologists(): Promise<Date> {
   });
 
   saveDialResults(
-    [...onlineNodes.map(node => getDialAttempt(node, true)), ...offlineNodes.map(node => getDialAttempt(node, false))],
-    timestampOfDial,
-    onlineNodes.length,
-    offlineNodes.length
+   [...onlineNodes.map(node => getDialAttempt(node, true)), ...offlineNodes.map(node => getDialAttempt(node, false))],
+   timestampOfDial,
+   onlineNodes.length,
+   offlineNodes.length
   );
 
   return new Date(Date.now() + Number.parseInt(process.env.DIAL_INTERVAL_MS!));
