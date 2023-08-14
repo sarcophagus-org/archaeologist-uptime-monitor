@@ -6,6 +6,7 @@ import { logging } from "./utils/logger";
 import { getOnlineNodes, getUptimeStats } from "./utils/db";
 
 import { TypedEthereumSigner } from "arbundles";
+import { isHexString } from "ethers/lib/utils";
 
 const app = express();
 const port = 4000;
@@ -23,13 +24,22 @@ app.get("/online-archaeologists", (req: Request, res: Response) => {
     .catch(() => res.status(500));
 });
 
-app.get("/arch-uptime-statistics", (req: Request, res: Response) => {
+app.get("/uptime-stats", (req: Request, res: Response) => {
   getUptimeStats()
     .then(stats => res.send(stats))
     .catch(() => res.status(500));
 });
 
+const allowedDomains = [
+  'app.dev.sarcophagus.io',
+  'app.sarcophagus.io'
+];
+
 app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
+  if (!allowedDomains.includes(req.headers.host ?? "")) {
+    res.status(403).json({ error: 'Access Forbidden' });
+  }
+
   const key = process.env.BUNDLR_PAYMENT_PRIVATE_KEY!;
   if (!key) throw new Error("Private key is undefined!");
 
@@ -38,7 +48,23 @@ app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
 });
 
 app.post("/bundlr/signData", async (req: Request, res: Response) => {
-  const messageDataBuffer = Buffer.from(req.body.messageData, "hex");
+  if (!allowedDomains.includes(req.headers.host ?? "")) {
+    res.status(403).json({ error: 'Access Forbidden' });
+  }
+
+  const { messageData } = req.body;
+
+  if (!messageData) {
+    res.status(400).json({ error: "messageData is undefined" });
+    return;
+  }
+
+  if (!isHexString(messageData)) {
+    res.status(400).json({ error: "messageData is not a hex string" });
+    return;
+  }
+
+  const messageDataBuffer = Buffer.from(messageData, "hex");
 
   const key = process.env.BUNDLR_PAYMENT_PRIVATE_KEY;
   if (!key) throw new Error("Private key is undefined!");
