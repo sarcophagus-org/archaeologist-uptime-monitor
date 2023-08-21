@@ -30,6 +30,7 @@
     "@libp2p/websockets": "^5.0.1",
     "@multiformats/multiaddr": "^11.3.0",
     "@sarcophagus-org/sarcophagus-v2-contracts": "^0.17.2",
+    "arbundles": "^0.9.8",
     "chalk": "^5.0.1",
     "cors": "^2.8.5",
     "csv-writer": "^1.6.0",

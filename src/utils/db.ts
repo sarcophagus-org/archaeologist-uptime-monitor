@@ -44,7 +44,7 @@ export const updateIncentivizedArchaeologists = async () => {
   try {
     console.log("Updating incentivized archaeologists...", incentivizedArchaeologists.length);
 
-    await runTransaction(db, async (transaction) => {
+    await runTransaction(db, async transaction => {
       for await (const address of incentivizedArchaeologists) {
         transaction.set(doc(db, `incentivized_archaeologists/${address}`), { address });
       }
@@ -56,9 +56,14 @@ export const updateIncentivizedArchaeologists = async () => {
   }
 };
 
-export const saveDialResults = async (attempts: DialAttempt[], timestampOfDial: number, successes: number, fails: number) => {
+export const saveDialResults = async (
+  attempts: DialAttempt[],
+  timestampOfDial: number,
+  successes: number,
+  fails: number
+) => {
   try {
-    await runTransaction(db, async (transaction) => {
+    await runTransaction(db, async transaction => {
       attempts.forEach(async record => {
         const newRecord: DialAttempt & { successes?: FieldValue; failures?: FieldValue } = record;
 
