@@ -27,7 +27,6 @@ const corsOptions = {
   }
 };
 
-app.use(cors());
 app.use(express.json());
 
 app.get("/", cors(), (req: Request, res: Response) => {
