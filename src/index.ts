@@ -82,9 +82,9 @@ app.get("/subgraph/past-sarcophagi", (req: Request, res: Response) => {
 const allowedDomains = ["app.dev.sarcophagus.io", "app.sarcophagus.io"];
 
 app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
-  if (!allowedDomains.includes(req.headers.host ?? "")) {
-    res.status(403).json({ error: "Access Forbidden" });
-  }
+  // if (!allowedDomains.includes(req.headers.host ?? "")) {
+  //   res.status(403).json({ error: "Access Forbidden" });
+  // }
 
   const key = process.env.BUNDLR_PAYMENT_PRIVATE_KEY!;
   if (!key) throw new Error("Private key is undefined!");
