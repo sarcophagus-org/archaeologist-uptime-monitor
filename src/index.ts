@@ -19,6 +19,7 @@ const whitelistedDomains = [
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('Received request from origin:', origin);
     if (whitelistedDomains.includes(origin) || !origin) {
       callback(null, true);
     } else {
