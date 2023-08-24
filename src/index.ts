@@ -19,7 +19,7 @@ const whitelistedDomains = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (whitelistedDomains.includes(origin) || !origin) {
+    if (origin && whitelistedDomains.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -110,10 +110,10 @@ app.post("/bundlr/signData", async (req: Request, res: Response) => {
     return;
   }
 
-  if (!isHexString(messageData)) {
-    res.status(400).json({ error: "messageData is not a hex string" });
-    return;
-  }
+  // if (!isHexString(messageData)) {
+  //   res.status(400).json({ error: "messageData is not a hex string" });
+  //   return;
+  // }
 
   const messageDataBuffer = Buffer.from(messageData, "hex");
 
