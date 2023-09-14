@@ -38,8 +38,17 @@ export async function getGracePeriod(): Promise<BigNumber> {
 }
 
 const getSubgraphUrl = (chainId: string): string => {
-  return (chainId === "5") ? process.env.GOERLI_SUBGRAPH_URL! : process.env.MAINNET_SUBGRAPH_URL!
-}
+  return chainId === "5"
+    ? process.env.GOERLI_SUBGRAPH_URL!
+    : chainId === "11155111"
+    ? process.env.SEPOLIA_SUBGRAPH_URL!
+    : chainId === "80001"
+    ? process.env.POLYGON_MUMBAI_SUBGRAPH_URL!
+    : chainId === "84531"
+    ? process.env.BASE_GOERLI_SUBGRAPH_URL!
+    : process.env.MAINNET_SUBGRAPH_URL!;
+};
+
 async function queryGraphQl(query: string, chainId: string) {
   const response = await fetch(
     getSubgraphUrl(chainId),
