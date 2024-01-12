@@ -92,6 +92,14 @@ app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
 });
 
 app.get("/quote", async (req: Request, res: Response) => {
+  if (!req.query.chainId) {
+    res.status(500).json({'error': 'chain ID required'});
+  }
+
+  if (!req.query.amount) {
+    res.status(500).json({'amount': 'amount required'});
+  }
+
   try {
     const sdk = new NodeSarcoClient({
       chainId: Number(req.query.chainId),
@@ -102,8 +110,10 @@ app.get("/quote", async (req: Request, res: Response) => {
 
     const quote = sdk.utils.getSarcoQuote(BigNumber.from(req.query.amount));
 
+    console.log('0x quote:', quote);
     res.status(200).json(quote);
   } catch (error) {
+    console.log('error retrieving quote:', error);
     res.status(500).json(error);
   }
 });
