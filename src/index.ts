@@ -110,7 +110,7 @@ app.get("/quote", async (req: Request, res: Response) => {
       zeroExApiKey: process.env.ZERO_X_API_KEY,
     });
 
-    const quote = sdk.utils.getSarcoQuote(BigNumber.from(req.query.amount));
+    const quote = await sdk.utils.getSarcoQuote(BigNumber.from(req.query.amount));
 
     console.log('0x quote:', quote);
     res.status(200).json(quote);
