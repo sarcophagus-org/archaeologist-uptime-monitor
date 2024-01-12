@@ -92,6 +92,8 @@ app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
 });
 
 app.get("/quote", async (req: Request, res: Response) => {
+  res.set('Cache-Control', 'no-cache');
+
   if (!req.query.chainId) {
     res.status(500).json({'error': 'chain ID required'});
   }
