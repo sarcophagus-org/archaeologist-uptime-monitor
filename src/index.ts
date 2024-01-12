@@ -7,7 +7,8 @@ import { getOfflineNodesAddresses, getOnlineNodes, getUptimeStats } from "./util
 import { SubgraphData } from "./graph/subgraph";
 
 import { TypedEthereumSigner } from "arbundles";
-import { isHexString } from "ethers/lib/utils";
+import { NodeSarcoClient } from "@sarcophagus-org/sarcophagus-v2-sdk";
+import { BigNumber, ethers } from "ethers";
 
 const app = express();
 const port = 4000;
@@ -90,6 +91,23 @@ app.get("/bundlr/publicKey", async (req: Request, res: Response) => {
   res.status(200).json({ publicKey: signer.publicKey.toString("hex") });
 });
 
+app.get("/quote", async (req: Request, res: Response) => {
+  try {
+    const sdk = new NodeSarcoClient({
+      chainId: Number(req.query.chainId),
+      privateKey: ethers.Wallet.createRandom().privateKey, // private key doesn't matter for these purposes
+      providerUrl: "https://eth-mainnet.g.alchemy.com/v2/demo", // neither does provider
+      zeroExApiKey: process.env.ZERO_X_API_KEY,
+    });
+
+    const quote = sdk.utils.getSarcoQuote(BigNumber.from(req.query.amount));
+
+    res.status(200).json(quote);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
 app.post("/bundlr/signData", async (req: Request, res: Response) => {
   const { messageData } = req.body;
 
@@ -97,11 +115,6 @@ app.post("/bundlr/signData", async (req: Request, res: Response) => {
     res.status(400).json({ error: "messageData is undefined" });
     return;
   }
-
-  // if (!isHexString(messageData)) {
-  //   res.status(400).json({ error: "messageData is not a hex string" });
-  //   return;
-  // }
 
   const messageDataBuffer = Buffer.from(messageData, "hex");
 
