@@ -5,6 +5,8 @@ import { startService } from "./start-service";
 import { logging } from "./utils/logger";
 import { getOfflineNodesAddresses, getOnlineNodes, getUptimeStats } from "./utils/db";
 import { SubgraphData } from "./graph/subgraph";
+import axios from "axios";
+import { getChain } from "@alchemy/aa-core";
 
 import { TypedEthereumSigner } from "arbundles";
 import { NodeSarcoClient } from "@sarcophagus-org/sarcophagus-v2-sdk";
@@ -151,25 +153,78 @@ app.post("/api/rpc/*", async (req: Request, res: Response) => {
   const routes = req.params[0]?.split('/') || [];
 
   try {
-    const response = await fetch(apiUrl + `/${routes.join("/")}`, {
+    const response = await axios({
       method: "POST",
+      url: `${apiUrl}/${routes.join("/")}`,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      data: body,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return res.status(response.status).json(errorData);
-    }
-
-    const data = await response.json();
-    res.json(data);
+    res.json(response.data);
   } catch (error) {
-    console.error('Error forwarding request to Alchemy:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (axios.isAxiosError(error)) {
+      console.error('Error forwarding request to Alchemy:', error.response?.data || error.message);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    } else {
+      console.error('Unexpected error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+app.post("/api/rpc/chain/:id", async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const chain = getChain(parseInt(id));
+
+  if (!chain) {
+    return res.status(404).json({ error: `Chain not found: ${id}` });
+  }
+
+  const rpcUrl = chain.rpcUrls.alchemy.http[0];
+  const apiKey = process.env.ALCHEMY_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "ALCHEMY_API_KEY is not set" });
+  }
+
+  const body = req.body;
+
+  try {
+    const apiResponse = await axios({
+      method: "POST",
+      url: `${rpcUrl}/${apiKey}`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: body,
+    });
+
+    res.json(apiResponse.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('Error forwarding request to Alchemy:', error.response?.data || error.message);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        res.status(500).json({ error: 'Server error occurred' });
+      }
+    } else {
+      console.error('Unexpected error:', error);
+      res.status(500).json({ error: 'Server error occurred' });
+    }
   }
 });
 

@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/sarcophagus-org/archaeologist-uptime-monitor#readme",
   "dependencies": {
+    "@alchemy/aa-core": "^3.18.2",
     "@chainsafe/libp2p-noise": "^10.0.0",
     "@libp2p/bootstrap": "^5.0.0",
     "@libp2p/kad-dht": "^5.0.1",
@@ -32,6 +33,7 @@
     "@sarcophagus-org/sarcophagus-v2-contracts": "^0.17.2",
     "@sarcophagus-org/sarcophagus-v2-sdk": "^0.2.61",
     "arbundles": "^0.9.8",
+    "axois": "^0.0.1-security",
     "chalk": "^5.0.1",
     "cors": "^2.8.5",
     "csv-writer": "^1.6.0",
