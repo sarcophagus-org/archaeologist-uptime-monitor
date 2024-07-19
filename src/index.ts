@@ -139,6 +139,40 @@ app.post("/bundlr/signData", async (req: Request, res: Response) => {
   res.status(200).json({ signature: signature.toString("hex") });
 });
 
+app.post("/api/rpc/*", async (req: Request, res: Response) => {
+  const apiUrl = "https://api.g.alchemy.com";
+  const apiKey = process.env.ALCHEMY_API_KEY;
+
+  if (apiKey == null) {
+    return res.status(500).json({ error: "ALCHEMY_API_KEY is not set" });
+  }
+
+  const body = req.body;
+  const routes = req.params[0]?.split('/') || [];
+
+  try {
+    const response = await fetch(apiUrl + `/${routes.join("/")}`, {
+      method: "POST",
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return res.status(response.status).json(errorData);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error forwarding request to Alchemy:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.listen(port, async () => {
   logging.debug("App start");
   validateEnvVars();
